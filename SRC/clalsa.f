@@ -42,7 +42,7 @@
 *>
 *> \verbatim
 *>
-*> CLALSA is an itermediate step in solving the least squares problem
+*> CLALSA is an intermediate step in solving the least squares problem
 *> by computing the SVD of the coefficient matrix in compact form (The
 *> singular vectors are computed as products of simple orthorgonal
 *> matrices.).

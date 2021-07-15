@@ -219,7 +219,7 @@
 *>          IDXQ is INTEGER array, dimension(N)
 *>         This contains the permutation which separately sorts the two
 *>         sub-problems in D into ascending order.  Note that entries in
-*>         the first hlaf of this permutation must first be moved one
+*>         the first half of this permutation must first be moved one
 *>         position backward; and entries in the second half
 *>         must first have NL+1 added to their values.
 *> \endverbatim
