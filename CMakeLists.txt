@@ -141,7 +141,7 @@ if(UNIX)
   endif()
 # Delete libmtsk in linking sequence for Sun/Oracle Fortran Compiler.
 # This library is not present in the Sun package SolarisStudio12.3-linux-x86-bin
-  string(REPLACE \;mtsk\; \; CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES "${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES}")
+  list(REMOVE_ITEM CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES mtsk)
 endif()
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL Compaq)
