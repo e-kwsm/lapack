@@ -2,6 +2,7 @@
 #define CBLAS_H
 #include <stddef.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 
 #ifdef __cplusplus
@@ -21,6 +22,17 @@ extern "C" {            /* Assume C declarations for C++ */
    #define CBLAS_INT int64_t
 #else
    #define CBLAS_INT int32_t
+#endif
+#endif
+
+/*
+ * Integer format string
+ */
+#ifndef CBLAS_IFMT
+#ifdef WeirdNEC
+   #define CBLAS_IFMT PRId64
+#else
+   #define CBLAS_IFMT PRId32
 #endif
 #endif
 
@@ -131,19 +143,13 @@ void cblas_zaxpy(const CBLAS_INT N, const void *alpha, const void *X,
 /*
  * Routines with S and D prefix only
  */
-void cblas_srotg(float *a, float *b, float *c, float *s);
 void cblas_srotmg(float *d1, float *d2, float *b1, const float b2, float *P);
-void cblas_srot(const CBLAS_INT N, float *X, const CBLAS_INT incX,
-                float *Y, const CBLAS_INT incY, const float c, const float s);
 void cblas_srotm(const CBLAS_INT N, float *X, const CBLAS_INT incX,
-                float *Y, const CBLAS_INT incY, const float *P);
-
-void cblas_drotg(double *a, double *b, double *c, double *s);
+                 float *Y, const CBLAS_INT incY, const float *P);
 void cblas_drotmg(double *d1, double *d2, double *b1, const double b2, double *P);
-void cblas_drot(const CBLAS_INT N, double *X, const CBLAS_INT incX,
-                double *Y, const CBLAS_INT incY, const double c, const double  s);
 void cblas_drotm(const CBLAS_INT N, double *X, const CBLAS_INT incX,
-                double *Y, const CBLAS_INT incY, const double *P);
+                 double *Y, const CBLAS_INT incY, const double *P);
+
 
 
 /*
@@ -155,6 +161,20 @@ void cblas_cscal(const CBLAS_INT N, const void *alpha, void *X, const CBLAS_INT 
 void cblas_zscal(const CBLAS_INT N, const void *alpha, void *X, const CBLAS_INT incX);
 void cblas_csscal(const CBLAS_INT N, const float alpha, void *X, const CBLAS_INT incX);
 void cblas_zdscal(const CBLAS_INT N, const double alpha, void *X, const CBLAS_INT incX);
+
+void cblas_srotg(float *a, float *b, float *c, float *s);
+void cblas_drotg(double *a, double *b, double *c, double *s);
+void cblas_crotg(void *a, void *b, float *c, void *s);
+void cblas_zrotg(void *a, void *b, double *c, void *s);
+
+void cblas_srot(const CBLAS_INT N, float *X, const CBLAS_INT incX,
+                float *Y, const CBLAS_INT incY, const float c, const float s);
+void cblas_drot(const CBLAS_INT N, double *X, const CBLAS_INT incX,
+                double *Y, const CBLAS_INT incY, const double c, const double  s);
+void cblas_csrot(const CBLAS_INT N, void *X, const CBLAS_INT incX,
+                 void *Y, const CBLAS_INT incY, const float c, const float s);
+void cblas_zdrot(const CBLAS_INT N, void *X, const CBLAS_INT incX,
+                 void *Y, const CBLAS_INT incY, const double c, const double s);
 
 /*
  * ===========================================================================
@@ -588,7 +608,11 @@ void cblas_zher2k(CBLAS_LAYOUT layout, CBLAS_UPLO Uplo,
                   const void *B, const CBLAS_INT ldb, const double beta,
                   void *C, const CBLAS_INT ldc);
 
-void cblas_xerbla(CBLAS_INT p, const char *rout, const char *form, ...);
+void
+#ifdef HAS_ATTRIBUTE_WEAK_SUPPORT
+__attribute__((weak))
+#endif
+cblas_xerbla(CBLAS_INT p, const char *rout, const char *form, ...);
 
 #ifdef __cplusplus
 }

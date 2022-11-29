@@ -103,9 +103,7 @@
 *> \param[in] LDV
 *> \verbatim
 *>          LDV is INTEGER
-*>          The leading dimension of the array V.
-*>          If SIDE = 'L', LDV >= max(1,M);
-*>          if SIDE = 'R', LDV >= max(1,N).
+*>          The leading dimension of the array V. LDV >= K.
 *> \endverbatim
 *>
 *> \param[in] T
@@ -135,8 +133,8 @@
 *> \verbatim
 *>          LDA is INTEGER
 *>          The leading dimension of the array A.
-*>          If SIDE = 'L', LDC >= max(1,K);
-*>          If SIDE = 'R', LDC >= max(1,M).
+*>          If SIDE = 'L', LDA >= max(1,K);
+*>          If SIDE = 'R', LDA >= max(1,M).
 *> \endverbatim
 *>
 *> \param[in,out] B
@@ -239,7 +237,7 @@
       EXTERNAL           LSAME
 *     ..
 *     .. External Subroutines ..
-      EXTERNAL           XERBLA, DLARFB, DTPRFB
+      EXTERNAL           XERBLA, DTPRFB
 *     ..
 *     .. Intrinsic Functions ..
       INTRINSIC          MAX, MIN

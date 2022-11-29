@@ -20,13 +20,13 @@
 *>
 *> \verbatim
 *>
-*> CGEMLQT overwrites the general real M-by-N matrix C with
+*> CGEMLQT overwrites the general complex M-by-N matrix C with
 *>
 *>                 SIDE = 'L'     SIDE = 'R'
 *> TRANS = 'N':      Q C            C Q
 *> TRANS = 'C':   Q**H C            C Q**H
 *>
-*> where Q is a complex orthogonal matrix defined as the product of K
+*> where Q is a complex unitary matrix defined as the product of K
 *> elementary reflectors:
 *>
 *>       Q = H(1) H(2) . . . H(K) = I - V T V**H
@@ -168,7 +168,7 @@
 *     ..
 *     .. Local Scalars ..
       LOGICAL            LEFT, RIGHT, TRAN, NOTRAN
-      INTEGER            I, IB, LDWORK, KF
+      INTEGER            I, IB, LDWORK, KF, Q
 *     ..
 *     .. External Functions ..
       LOGICAL            LSAME
@@ -192,8 +192,10 @@
 *
       IF( LEFT ) THEN
          LDWORK = MAX( 1, N )
+         Q = M
       ELSE IF ( RIGHT ) THEN
          LDWORK = MAX( 1, M )
+         Q = N
       END IF
       IF( .NOT.LEFT .AND. .NOT.RIGHT ) THEN
          INFO = -1
@@ -203,7 +205,7 @@
          INFO = -3
       ELSE IF( N.LT.0 ) THEN
          INFO = -4
-      ELSE IF( K.LT.0) THEN
+      ELSE IF( K.LT.0 .OR. K.GT.Q ) THEN
          INFO = -5
       ELSE IF( MB.LT.1 .OR. (MB.GT.K .AND. K.GT.0)) THEN
          INFO = -6

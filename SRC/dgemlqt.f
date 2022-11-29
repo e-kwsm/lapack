@@ -110,7 +110,7 @@
 *> \param[in] LDV
 *> \verbatim
 *>          LDV is INTEGER
-*>          The leading dimension of the array V. LDV >= max(1,K).
+*>          The leading dimension of the array V.  LDV >= max(1,K).
 *> \endverbatim
 *>
 *> \param[in] T
@@ -183,7 +183,7 @@
 *     ..
 *     .. Local Scalars ..
       LOGICAL            LEFT, RIGHT, TRAN, NOTRAN
-      INTEGER            I, IB, LDWORK, KF
+      INTEGER            I, IB, LDWORK, KF, Q
 *     ..
 *     .. External Functions ..
       LOGICAL            LSAME
@@ -207,8 +207,10 @@
 *
       IF( LEFT ) THEN
          LDWORK = MAX( 1, N )
+         Q = M
       ELSE IF ( RIGHT ) THEN
          LDWORK = MAX( 1, M )
+         Q = N
       END IF
       IF( .NOT.LEFT .AND. .NOT.RIGHT ) THEN
          INFO = -1
@@ -218,7 +220,7 @@
          INFO = -3
       ELSE IF( N.LT.0 ) THEN
          INFO = -4
-      ELSE IF( K.LT.0) THEN
+      ELSE IF( K.LT.0 .OR. K.GT.Q ) THEN
          INFO = -5
       ELSE IF( MB.LT.1 .OR. (MB.GT.K .AND. K.GT.0)) THEN
          INFO = -6

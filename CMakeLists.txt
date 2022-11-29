@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.2)
 project(LAPACK Fortran C)
 
 set(LAPACK_MAJOR_VERSION 3)
-set(LAPACK_MINOR_VERSION 10)
+set(LAPACK_MINOR_VERSION 11)
 set(LAPACK_PATCH_VERSION 0)
 set(
   LAPACK_VERSION
@@ -39,6 +39,40 @@ message(STATUS "${_msg}: ${_is_coverage_build}")
 if(_is_coverage_build)
   message(STATUS "Adding coverage")
   find_package(codecov)
+endif()
+
+# By default test Fortran compiler complex abs and complex division
+option(TEST_FORTRAN_COMPILER "Test Fortran compiler complex abs and complex division" ON)
+if( TEST_FORTRAN_COMPILER )
+
+  add_executable( test_zcomplexabs ${LAPACK_SOURCE_DIR}/INSTALL/test_zcomplexabs.f )
+  add_custom_target( run_test_zcomplexabs
+    COMMAND test_zcomplexabs 2> test_zcomplexabs.err
+    WORKING_DIRECTORY ${LAPACK_BINARY_DIR}/INSTALL
+    COMMENT "Running test_zcomplexabs in ${LAPACK_BINARY_DIR}/INSTALL with stderr: test_zcomplexabs.err"
+    SOURCES ${LAPACK_SOURCE_DIR}/INSTALL/test_zcomplexabs.f )
+
+  add_executable( test_zcomplexdiv ${LAPACK_SOURCE_DIR}/INSTALL/test_zcomplexdiv.f )
+  add_custom_target( run_test_zcomplexdiv
+    COMMAND test_zcomplexdiv 2> test_zcomplexdiv.err
+    WORKING_DIRECTORY ${LAPACK_BINARY_DIR}/INSTALL
+    COMMENT "Running test_zcomplexdiv in ${LAPACK_BINARY_DIR}/INSTALL with stderr: test_zcomplexdiv.err"
+    SOURCES ${LAPACK_SOURCE_DIR}/INSTALL/test_zcomplexdiv.f )
+
+  add_executable( test_zcomplexmult ${LAPACK_SOURCE_DIR}/INSTALL/test_zcomplexmult.f )
+  add_custom_target( run_test_zcomplexmult
+    COMMAND test_zcomplexmult 2> test_zcomplexmult.err
+    WORKING_DIRECTORY ${LAPACK_BINARY_DIR}/INSTALL
+    COMMENT "Running test_zcomplexmult in ${LAPACK_BINARY_DIR}/INSTALL with stderr: test_zcomplexmult.err"
+    SOURCES ${LAPACK_SOURCE_DIR}/INSTALL/test_zcomplexmult.f )
+
+  add_executable( test_zminMax ${LAPACK_SOURCE_DIR}/INSTALL/test_zminMax.f )
+  add_custom_target( run_test_zminMax
+    COMMAND test_zminMax 2> test_zminMax.err
+    WORKING_DIRECTORY ${LAPACK_BINARY_DIR}/INSTALL
+    COMMENT "Running test_zminMax in ${LAPACK_BINARY_DIR}/INSTALL with stderr: test_zminMax.err"
+    SOURCES ${LAPACK_SOURCE_DIR}/INSTALL/test_zminMax.f )
+    
 endif()
 
 # By default static library
@@ -99,6 +133,8 @@ elseif(CMAKE_Fortran_COMPILER_ID STREQUAL Intel)
   check_fortran_compiler_flag("-recursive" _recursiveFlag)
 elseif(CMAKE_Fortran_COMPILER_ID STREQUAL XL)
   check_fortran_compiler_flag("-qrecur" _qrecurFlag)
+elseif(CMAKE_Fortran_COMPILER_ID STREQUAL NAG)
+  check_fortran_compiler_flag("-recursive" _recursiveFlag)
 else()
   message(WARNING "Fortran local arrays should be allocated on the stack."
     " Please use a compiler which guarantees that feature."
@@ -171,6 +207,22 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL Compaq)
   endif()
 endif()
 
+# Add option to enable flat namespace for symbol resolution on macOS
+if(APPLE)
+  option(USE_FLAT_NAMESPACE "Use flat namespaces for symbol resolution during build and runtime." OFF)
+
+  if(USE_FLAT_NAMESPACE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-flat_namespace")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-flat_namespace")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-flat_namespace")
+  else()
+    if(BUILD_SHARED_LIBS AND BUILD_TESTING)
+      message(WARNING
+        "LAPACK test suite might fail with shared libraries and the default two-level namespace. "
+        "Disable shared libraries or enable flat namespace for symbol resolution via -DUSE_FLAT_NAMESPACE=ON.")
+    endif()
+  endif()
+endif()
 
 # --------------------------------------------------
 set(LAPACK_INSTALL_EXPORT_NAME ${LAPACKLIB}-targets)
@@ -221,7 +273,7 @@ CheckLAPACKCompilerFlags()
 # Check second function
 
 include(CheckTimeFunction)
-set(NONE ${TIME_FUNC})
+set(TIME_FUNC NONE)
 CHECK_TIME_FUNCTION(NONE TIME_FUNC)
 CHECK_TIME_FUNCTION(INT_CPU_TIME TIME_FUNC)
 CHECK_TIME_FUNCTION(EXT_ETIME TIME_FUNC)
@@ -415,8 +467,8 @@ if (BLAS++)
   include(ExternalProject)
   ExternalProject_Add(blaspp
 	  URL https://bitbucket.org/icl/blaspp/downloads/blaspp-2020.10.02.tar.gz
-	  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} ${PROJECT_BINARY_DIR}/blaspp-prefix/src/blaspp
-	  BUILD_COMMAND ${CMAKE_COMMAND} -E env LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib LIB_SUFFIX="" make
+	  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env LIBRARY_PATH=$ENV{LIBRARY_PATH}:${CMAKE_BINARY_DIR}/lib LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}:${PROJECT_BINARY_DIR}/lib ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} ${PROJECT_BINARY_DIR}/blaspp-prefix/src/blaspp
+	  BUILD_COMMAND ${CMAKE_COMMAND} -E env LIBRARY_PATH=$ENV{LIBRARY_PATH}:${PROJECT_BINARY_DIR}/lib LIB_SUFFIX="" make
 	  INSTALL_COMMAND make PREFIX=${PROJECT_BINARY_DIR} LIB_SUFFIX="" install
 	  )
   ExternalProject_Add_StepDependencies(blaspp build ${BLAS_LIBRARIES})
@@ -428,16 +480,16 @@ if (LAPACK++)
   if (BUILD_SHARED_LIBS)
   ExternalProject_Add(lapackpp
 	  URL https://bitbucket.org/icl/lapackpp/downloads/lapackpp-2020.10.02.tar.gz
-	  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DLAPACK_LIBRARIES=${LAPACK_LIBRARIES} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}  ${PROJECT_BINARY_DIR}/lapackpp-prefix/src/lapackpp
-	  BUILD_COMMAND ${CMAKE_COMMAND} -E env LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib LIB_SUFFIX="" make
+	  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env LIBRARY_PATH=$ENV{LIBRARY_PATH}:${CMAKE_BINARY_DIR}/lib LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}:${PROJECT_BINARY_DIR}/lib ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DLAPACK_LIBRARIES=${LAPACK_LIBRARIES} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}  ${PROJECT_BINARY_DIR}/lapackpp-prefix/src/lapackpp
+	  BUILD_COMMAND ${CMAKE_COMMAND} -E env LIBRARY_PATH=$ENV{LIBRARY_PATH}:${PROJECT_BINARY_DIR}/lib LIB_SUFFIX="" make
 	  INSTALL_COMMAND make PREFIX=${PROJECT_BINARY_DIR} LIB_SUFFIX="" install
 	  )
   else ()
 # FIXME this does not really work as the libraries list gets converted to a semicolon-separated list somewhere in the lapack++ build files
   ExternalProject_Add(lapackpp
 	  URL https://bitbucket.org/icl/lapackpp/downloads/lapackpp-2020.10.02.tar.gz
-	  CONFIGURE_COMMAND env LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DLAPACK_LIBRARIES="${PROJECT_BINARY_DIR}/lib/liblapack.a -lgfortran"  -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}  ${PROJECT_BINARY_DIR}/lapackpp-prefix/src/lapackpp
-	  BUILD_COMMAND env LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib LIB_SUFFIX="" make
+	  CONFIGURE_COMMAND env LIBRARY_PATH=$ENV{LIBRARY_PATH}:${CMAKE_BINARY_DIR}/lib LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}:${PROJECT_BINARY_DIR}/lib ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DLAPACK_LIBRARIES="${PROJECT_BINARY_DIR}/lib/liblapack.a -lgfortran"  -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}  ${PROJECT_BINARY_DIR}/lapackpp-prefix/src/lapackpp
+	  BUILD_COMMAND env LIBRARY_PATH=$ENV{LIBRARY_PATH}:${PROJECT_BINARY_DIR}/lib LIB_SUFFIX="" make
 	  INSTALL_COMMAND make PREFIX=${PROJECT_BINARY_DIR} LIB_SUFFIX="" install
   )
   endif()

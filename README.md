@@ -35,6 +35,8 @@
 * VERSION 3.9.0 : November 2019
 * VERSION 3.9.1 : April 2021
 * VERSION 3.10.0 : June 2021
+* VERSION 3.10.1 : April 2022
+* VERSION 3.11.0 : November 2022
 
 LAPACK is a library of Fortran subroutines for solving the most commonly
 occurring problems in numerical linear algebra.
@@ -79,7 +81,15 @@ CBLAS, a C interface to the BLAS, and (5) LAPACKE, a C interface to LAPACK.
    cmake -DCMAKE_INSTALL_LIBDIR=$HOME/.local/lapack ..
    cmake --build . -j --target install
    ```
-
+ - LAPACK can be built and installed using [vcpkg](https://github.com/Microsoft/vcpkg/) dependency manager:
+   ```sh
+   git clone https://github.com/Microsoft/vcpkg.git
+   cd vcpkg
+   ./bootstrap-vcpkg.sh  # ./bootstrap-vcpkg.bat for Windows
+   ./vcpkg integrate install
+   ./vcpkg install lapack
+   ```
+   The lapack port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
 
 ## User Support
 

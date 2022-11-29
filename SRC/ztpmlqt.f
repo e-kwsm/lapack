@@ -36,7 +36,7 @@
 *>
 *> \verbatim
 *>
-*> ZTPMLQT applies a complex orthogonal matrix Q obtained from a
+*> ZTPMLQT applies a complex unitary matrix Q obtained from a
 *> "triangular-pentagonal" complex block reflector H to a general
 *> complex matrix C, which consists of two blocks A and B.
 *> \endverbatim
@@ -103,9 +103,7 @@
 *> \param[in] LDV
 *> \verbatim
 *>          LDV is INTEGER
-*>          The leading dimension of the array V.
-*>          If SIDE = 'L', LDV >= max(1,M);
-*>          if SIDE = 'R', LDV >= max(1,N).
+*>          The leading dimension of the array V. LDV >= K.
 *> \endverbatim
 *>
 *> \param[in] T
@@ -135,8 +133,8 @@
 *> \verbatim
 *>          LDA is INTEGER
 *>          The leading dimension of the array A.
-*>          If SIDE = 'L', LDC >= max(1,K);
-*>          If SIDE = 'R', LDC >= max(1,M).
+*>          If SIDE = 'L', LDA >= max(1,K);
+*>          If SIDE = 'R', LDA >= max(1,M).
 *> \endverbatim
 *>
 *> \param[in,out] B
@@ -199,7 +197,7 @@
 *>
 *>  If SIDE = 'R':  C = [A B]  where A is M-by-K, B is M-by-N and V is K-by-N.
 *>
-*>  The real orthogonal matrix Q is formed from V and T.
+*>  The complex unitary matrix Q is formed from V and T.
 *>
 *>  If TRANS='N' and SIDE='L', C is on exit replaced with Q * C.
 *>
